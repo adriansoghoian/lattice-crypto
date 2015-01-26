@@ -53,7 +53,7 @@ def gen_nonsingular_matrix(n, p):
 
             A = reduce_matrix(A, p)
             T = reduce_matrix(T, p)
-            generate(reduced_matrix(A, 0, r), reduced_matrix(T, r, r), n - 1, p)
+            generate(submatrix(A, 0, r), submatrix(T, r, r), n - 1, p)
 
     generate(A, T, n, p)
     return reduce_matrix(np.dot(A, T), p)
@@ -83,7 +83,7 @@ def reduce_matrix(M, p, is_noise=False):
     return M
 
 
-def reduced_matrix(matrix, i, j):
+def submatrix(matrix, i, j):
     """
     Returns the submatrix when the ith row and jth columns are removed.
     """
@@ -91,11 +91,32 @@ def reduced_matrix(matrix, i, j):
                np.array(range(j) + range(j + 1,matrix.shape[1]))]
 
 
+def find_prime(n):
+    """
+    Finds a prime greater than n. In this case, it finds the first prime
+    greater than n.
+    """
+    primes = [3]
+    candidate = 5
+
+    while primes[-1] < n:
+        is_prime = True
+        for prime in primes:
+            if candidate % prime == 0:
+                is_prime = False
+                continue
+
+        if is_prime: primes.append(candidate)
+        candidate += 2
+
+    return primes[-1]
+
+
 def matrix_minor(matrix, i, j):
     """
-    Returns a matrix with the ith row and jth column removed.
+    Returns the matrix(i, j) minor: http://en.wikipedia.org/wiki/Minor_%28linear_algebra%29
     """
-    reduced = reduced_matrix(matrix, i, j)
+    reduced = submatrix(matrix, i, j)
 
     return int(round(np.linalg.det(reduced)))
 
@@ -103,6 +124,8 @@ def matrix_minor(matrix, i, j):
 def adjoint_matrix(matrix):
     """
     Determines the adjoint / adjugate matrix of a given square matrix.
+
+    Adjoint matrices: http://en.wikipedia.org/wiki/Adjugate_matrix
     """
     adjoint_matrix = np.empty(matrix.shape, dtype=int)
     matrix = matrix.T
@@ -128,8 +151,7 @@ def modular_inverse(a, m):
 
 def extended_euclidean(a, b):
     """
-    Recursive implementation of extended Euclidean algorithm. Returns of a triple
-    of form (gcd, x, y) with ax + by = g = gcd(a, b).
+    Recursive extended Euclidean. Returns a triple (gcd, x, y) of form ax + by = g = gcd(a, b).
     """
     if a == 0:
         return (b, 0, 1)
@@ -140,30 +162,12 @@ def extended_euclidean(a, b):
 
 def matrix_inversion_cofactor(matrix, p):
     """
-    Matrix inversion by applying (1/det(A)) to the transpose of the cofactor matrix.
+    Matrix inversion by applying (1/det(A)) to the transpose of the cofactor matrix (adjoint matrix).
     """
     determinant = modular_inverse(int(round(np.linalg.det(matrix))) % p, p)
     adjoint = adjoint_matrix(matrix)
 
     return reduce_matrix(determinant*adjoint, p)
-
-
-def recover_bits(unscrambled_noise, q, p):
-    """
-    Returns the relevant bit from unscrambled noise given q.
-    """
-    counter = 0
-    differences = [unscrambled_noise]
-
-    while True:
-        difference = abs(unscrambled_noise - q)
-
-        if differences[-1] < difference:
-            return counter
-
-        counter += 1
-        differences.append(difference)
-        unscrambled_noise -= q
 
 
 if __name__ == "__main__":
