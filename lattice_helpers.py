@@ -1,6 +1,3 @@
-# Efficient nonsingular matrix generation over finite fields
-# Based on this paper by Dana Randall: http://www.eecs.berkeley.edu/Pubs/TechRpts/1991/CSD-91-658.pdf
-
 import numpy as np
 import random
 
